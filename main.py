@@ -1,31 +1,18 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
-from time import sleep
-from typing import Any
 import sys
 import signal
 import psutil
 from pprint import pprint
-
-# def print_table(data):
-#     col_widths = [15, 15]
-#     headers = ["PID", "NAME"]
-
-#     print(f"*"+"-"*sum(col_widths)+" ")
-#     print("* {:{widths[0]}} | {:{widths[1]}}".format(headers[0],
-#                                                      headers[1], widths=col_widths))
-#     print("*" + "-" * sum(col_widths) + " ")
-    
-#     for row in data:
-#             print("* {:{widths[0]}} | {:{widths[1]}}".format(row[0], row[1], widths=col_widths))
-#             sleep(0.5)
-
-# def printing_process(process: Any) -> None:
-
-#     print(f"*    {process.pid}  {process.name()}")
+from prettytable import PrettyTable
 
 
-def sig_handler(sig, frame):
+class ProcessEnumeration:
+    def __init__(self):
+        pass
+
+
+def sig_handler():
     print("""\n\n\t[*] Exiting...\n\n""")
     sys.exit(0)
 
@@ -33,43 +20,52 @@ def sig_handler(sig, frame):
 signal.signal(signal.SIGINT, sig_handler)
 
 
-def main():
+def main_():
     try:
-        # print_table()
-        data = []
-        process_info_list = []
-        
-        # list_table = [[x.info['pid'], x.info['name'], x.info['username'], x.info['memory_info'].rss / (1024 * 1024)] for x in psutil.process_iter(["pid", "name", "username", "memory_info"])]
-        list_table = [[x.info['pid'], x.info['name'], x.info['username'], x.info['cpu_percent']] for x in psutil.process_iter(["pid", "name", "username", "cpu_percent"])]
-        # # pprint(list_table)
-        # for process in psutil.process_iter(['pid', 'name', 'username', 'memory_info', 'cpu_percent', 'status', 'create_time']):
-        #     try:
-        #         process_info = {
-        #             'pid': process.info['pid'],
-        #             'name': process.info['name'],
-        #             'user': process.info['username'],
-        #             'memory': process.info['memory_info'].rss / (1024 * 1024),  # in MB
-        #             'cpu_percent': process.info['cpu_percent'],
-        #             'status': process.info['status'],
-        #             'create_time': process.info['create_time']
-        #         }
-        #         process_info_list.append(process_info)
-        #     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        #         pass
-        
-        
-        for process in psutil.process_iter(["pid", "name", "username", "cpu_percent"]):
+        process_info = dict()
+        data = list()
+        for process in psutil.process_iter(["pid", "name", "username", "cpu_percent", "memory_info"]):
             try:
                 process_info = {
-                    "pid":process.info['pid'], 
-                    "username":process.info['username']
+                    "pid": process.info['pid'],
+                    "username": process.info['username'],
+                    "cpu_percent":process.info['cpu_percent'],
+                    "memory_info":int(process.info['memory_info'].rss)/(1024 * 1024)
                 }
+                data.append(process_info)
             except Exception as e:
                 print(str(e))
-        pprint(process_info)
+        pprint(data)
     except Exception as e:
         print("Error by: ", str(e))
         sys.exit(1)
+
+
+def main():
+    x = PrettyTable()
+    """
+    x.field_names = ["City name", "Area", "Population", "Annual Rainfall"]
+
+    x.add_row(["Adelaide", 1295, 1158259, 600.5])
+    x.add_row(["Brisbane", 5905, 1857594, 1146.4])
+    x.add_row(["Darwin", 112, 120900, 1714.7])
+    x.add_row(["Hobart", 1357, 205556, 619.5])
+    x.add_row(["Sydney", 2058, 4336374, 1214.8])
+    x.add_row(["Melbourne", 1566, 3806092, 646.9])
+    x.add_row(["Perth", 5386, 1554769, 869.4])
+
+    print(x)
+    """
+
+    x.field_names = ["username", "pid", "name", "cpu_percent", "memory_info"]
+    for process in psutil.process_iter(["username", "pid", "name", "cpu_percent", "memory_info"]):
+        # print(f"name: {x.info['name']}")
+        # x.add_row([x.info["pid"], x.info["name"], x.info["username"]])
+        x.add_row([process.info['username'], process.info['pid'], process.info['name'], f"{process.info['cpu_percent']} %", int(process.info['memory_info'].rss/(1024*1024))])
+        
+
+
+    print(x)
 
 
 if __name__ == "__main__":
